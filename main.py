@@ -12,7 +12,7 @@ userhistory_df = None
 destinations_df = None
 
 origins = [
-  "http://localhost:5173"
+  "*"
 ]
 
 app.add_middleware(
