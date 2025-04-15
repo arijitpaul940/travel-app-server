@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from gemini_utils import estimate_budget_with_gemini
 
 
 app = FastAPI()
@@ -30,6 +32,13 @@ users_df = pd.read_pickle("users_df.pkl")
 userhistory_df = pd.read_pickle("userhistory_df.pkl")
 destinations_df = pd.read_pickle("destinations_df.pkl")
 destinations_with_pictures_df = pd.read_pickle("destinations_with_pictures_df.pkl")
+
+
+class BudgetRequest(BaseModel):
+  place_name: str
+  best_time_to_visit: str
+  duration: str
+  total_persons: int
 
 
 def get_all_users(users_df):
@@ -132,3 +141,14 @@ def get_visited_places_api(user_id: int):
 def recommend(user_id: int):
   result = recommend_destinations(user_id, userhistory_df, destinations_with_pictures_df, cosine_sim)
   return {"user_id": user_id, "recommendations": result}
+
+
+@app.post("/estimate_budget")
+def estimate_budget(request: BudgetRequest):
+  response = estimate_budget_with_gemini(
+    request.place_name,
+    request.best_time_to_visit,
+    request.duration,
+    request.total_persons,
+  )
+  return {"place": request.place_name, "budget_estimate": response}
